@@ -46,14 +46,47 @@
     padding: 0 8px;
     font-size: 14px;
   }
-  pre.fig {
-    font-family: monospace;
-    font-size: 16px;
-    line-height: 1.15;
-    margin: 8px auto;
-    text-align: left;
-    display: table;
+  table.gal { border-collapse: collapse; margin: 4px auto 8px; }
+  table.gal td { padding: 0; background: #fff; vertical-align: top; text-align: center; }
+  table.gal td.wing { width: 52px; background: #fff; }
+  table.gal td.post { width: 16px; background: #000; }
+  table.gal td.beam { height: 16px; background: #000; }
+  table.gal td.side { width: 58px; background: #fff; }
+  table.gal td.mid { width: 56px; position: relative; background: #fff; }
+  table.gal td.rope { height: 28px; }
+  div.noose { width: 4px; height: 28px; background: #000; margin: 0 auto; }
+  div.face {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto;
+    border: 4px solid #fff;
+    border-radius: 50%;
+    box-sizing: border-box;
   }
+  div.face.on { border-color: #000; }
+  table.gal td.body { height: 72px; }
+  div.torso { width: 4px; height: 72px; margin: 0 auto; background: #fff; }
+  div.torso.on { background: #000; }
+  div.arm, div.leg { position: absolute; height: 4px; background: #fff; }
+  div.arm.on, div.leg.on { background: #000; }
+  div.arm { width: 52px; top: 2px; }
+  div.arm.l, div.leg.l {
+    right: 24px;
+    -webkit-transform-origin: right center;
+    transform-origin: right center;
+  }
+  div.arm.r, div.leg.r {
+    left: 24px;
+    -webkit-transform-origin: left center;
+    transform-origin: left center;
+  }
+  div.arm.l { -webkit-transform: rotate(-42deg); transform: rotate(-42deg); }
+  div.arm.r { -webkit-transform: rotate(42deg); transform: rotate(42deg); }
+  table.gal td.hip { height: 64px; }
+  div.leg { width: 54px; top: -2px; }
+  div.leg.l { -webkit-transform: rotate(-50deg); transform: rotate(-50deg); }
+  div.leg.r { -webkit-transform: rotate(50deg); transform: rotate(50deg); }
+  table.gal td.ground { height: 16px; background: #000; }
   table.word { margin: 8px auto; border-collapse: separate; border-spacing: 4px; }
   table.word td {
     width: 32px;
@@ -65,9 +98,9 @@
     font-weight: bold;
     padding: 0;
   }
-  table.pad { width: 100%; border-collapse: separate; border-spacing: 4px; margin: 8px 0; }
-  table.pad td { width: 14%; padding: 0; }
-  table.pad button { margin: 0; min-height: 0; height: 40px; padding: 0; font-size: 18px; }
+  table.pad { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 3px; margin: 8px 0; }
+  table.pad td { padding: 0; }
+  table.pad button { margin: 0; min-height: 0; height: 36px; padding: 0; font-size: 16px; }
   .block { border: 2px solid #000; padding: 12px; margin: 12px 0; text-align: center; }
   .block .big { font-size: 28px; font-weight: bold; letter-spacing: 2px; }
   #flash { display: none; background: #fff; height: 2400px; }
@@ -85,6 +118,10 @@
   var ABC = {
     tr: 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ',
     en: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  };
+  var KEYS = {
+    tr: ['QWERTYUIOPĞÜ', 'ASDFGHJKLŞİ', 'ZXCVBNMÖÇ'],
+    en: ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM']
   };
   var STR = {
     tr: {
@@ -339,22 +376,28 @@
     begin(result.word);
   }
 
-  function fig(n) {
-    var head = n > 0 ? 'O' : ' ';
-    var body = n > 1 ? '|' : ' ';
-    var left = n > 2 ? '/' : ' ';
-    var right = n > 3 ? '\\' : ' ';
-    var legL = n > 4 ? '/' : ' ';
-    var legR = n > 5 ? '\\' : ' ';
-    return [
-      '  +---+',
-      '  |   |',
-      '  |   ' + head,
-      '  |  ' + left + body + right,
-      '  |  ' + legL + ' ' + legR,
-      '  |',
-      '======'
-    ].join('\n');
+  function piece(cls, on) {
+    return '<div class="' + cls + (on ? ' on' : '') + '"></div>';
+  }
+
+  function gallowsHtml(n) {
+    var h = '';
+    h += '<table class="gal"><tbody>';
+    h += '<tr><td class="wing"></td><td class="post"></td><td class="beam" colspan="3"></td></tr>';
+    h += '<tr><td class="wing"></td><td class="post"></td><td class="side"></td><td class="mid rope"><div class="noose"></div></td><td class="side"></td></tr>';
+    h += '<tr><td class="wing"></td><td class="post"></td><td class="side"></td><td class="mid">' + piece('face', n >= 1) + '</td><td class="side"></td></tr>';
+    h += '<tr><td class="wing"></td><td class="post"></td><td class="side"></td><td class="mid body">';
+    h += piece('torso', n >= 2);
+    h += piece('arm l', n >= 3);
+    h += piece('arm r', n >= 4);
+    h += '</td><td class="side"></td></tr>';
+    h += '<tr><td class="wing"></td><td class="post"></td><td class="side"></td><td class="mid hip">';
+    h += piece('leg l', n >= 5);
+    h += piece('leg r', n >= 6);
+    h += '</td><td class="side"></td></tr>';
+    h += '<tr><td class="ground"></td><td class="ground"></td><td class="ground" colspan="3"></td></tr>';
+    h += '</tbody></table>';
+    return h;
   }
 
   function begin(word) {
@@ -368,15 +411,28 @@
     showGame();
   }
 
+  function keyAlphabet() {
+    return KEYS[langCode()].join('');
+  }
+
   function letterTable() {
-    var abc = ABC[langCode()];
+    var rows = KEYS[langCode()];
     var html = '<table class="pad"><tbody>';
-    var i, ch;
-    for (i = 0; i < abc.length; i++) {
-      if (i % 7 === 0) html += '<tr>';
-      ch = abc.charAt(i);
-      html += '<td><button type="button" data-l="' + ch + '">' + ch + '</button></td>';
-      if (i % 7 === 6 || i === abc.length - 1) html += '</tr>';
+    var grid = rows[0].length * 2;
+    var r, i, ch, row, lead, used, rest;
+    for (r = 0; r < rows.length; r++) {
+      row = rows[r];
+      lead = r === 0 ? 0 : (r === 1 ? 1 : 3);
+      html += '<tr>';
+      if (lead) html += '<td colspan="' + lead + '"></td>';
+      for (i = 0; i < row.length; i++) {
+        ch = row.charAt(i);
+        html += '<td colspan="2"><button type="button" data-l="' + ch + '">' + ch + '</button></td>';
+      }
+      used = lead + row.length * 2;
+      rest = grid - used;
+      if (rest > 0) html += '<td colspan="' + rest + '"></td>';
+      html += '</tr>';
     }
     html += '</tbody></table>';
     return html;
@@ -391,7 +447,7 @@
     html += '<td class="htitle"><h1>' + lang.title + '</h1></td>';
     html += '<td class="hlang"><p id="miss" class="meta"></p></td>';
     html += '</tr></tbody></table>';
-    html += '<pre id="fig" class="fig"></pre>';
+    html += '<div id="fig"></div>';
     html += '<div id="wordwrap"></div>';
     html += letterTable();
     html += '<button type="button" id="menu">' + lang.menu + '</button>';
@@ -440,7 +496,7 @@
 
   function paintFigure() {
     var el = byId('fig');
-    if (el) el.textContent = fig(mistakes);
+    if (el) el.innerHTML = gallowsHtml(mistakes);
   }
 
   function paintMiss() {
@@ -462,7 +518,7 @@
     var i, hit, done;
     if (view !== 'game' || !letter) return;
     letter = trUpper(letter);
-    if (ABC[langCode()].indexOf(letter) < 0) return;
+    if (keyAlphabet().indexOf(letter) < 0) return;
     if (guessed[letter]) return;
     guessed[letter] = 1;
     hit = 0;
@@ -494,6 +550,7 @@
     view = 'end';
     secret = '';
     html += '<h1>' + (won ? lang.win : lang.lose) + '</h1>';
+    if (!won) html += gallowsHtml(mistakes);
     html += '<div class="block"><div class="meta">' + lang.theWord + '</div><div class="big">' + shown + '</div></div>';
     html += '<p class="meta">' + lang.mistakes + ' ' + mistakes + '/' + MAX + '</p>';
     html += '<button type="button" id="again">' + lang.again + '</button>';
